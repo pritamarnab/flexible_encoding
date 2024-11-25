@@ -13,6 +13,7 @@ from sklearn.preprocessing import normalize
 from functools import reduce 
 from sklearn.model_selection import KFold
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
 import argparse
 import torch
 from torch import nn
@@ -352,6 +353,10 @@ electrode_data=electrode_data[:p,:,:]
 embeddings=np.asarray(embeddings)
 pca = PCA(n_components=emb_dim)
 embeddings=pca.fit_transform(embeddings)
+
+scaler = StandardScaler()
+embeddings=scaler.fit_transform(embeddings)
+
 embeddings = np.expand_dims(embeddings, axis=1)
 
 
@@ -359,7 +364,13 @@ print('embeddings shape:',np.shape(embeddings))
 print('elec data shape:',np.shape(electrode_data))
 
 elec_data=electrode_data[:,electrode,:]
+
+scaler = StandardScaler()
+elec_data=scaler.fit_transform(elec_data)
+
 elec_data = np.expand_dims(elec_data, axis=1)
+
+
 X_train=torch.from_numpy(embeddings[:train_num,:,:])
 y_train=torch.from_numpy(elec_data[:train_num,:,:])
 
@@ -505,6 +516,7 @@ def train_one_epoch(epoch_index,args):
         
     
 #Training
+corr=[]
 
 for epoch in range(EPOCHS):
     print('EPOCH {}:'.format(epoch + 1))
@@ -518,6 +530,9 @@ for epoch in range(EPOCHS):
     # Set the model to evaluation mode, disabling dropout and using population
     # statistics for batch normalization.
     model.eval()
+
+    predicted=[]
+    actual=[]
 
     # Disable gradient computation and reduce memory consumption.
     with torch.no_grad():
@@ -537,8 +552,31 @@ for epoch in range(EPOCHS):
             
             running_vloss += vloss
 
+            a1=torch.min(output1,dim=-1)
+            predicted.append((a1.values))
+
+            for i in range(vlabels.shape[0]):    
+                actual.append(vlabels[i, a1.indices[i]] )
+
     avg_vloss = running_vloss / (i + 1)
     print('LOSS train {} valid {}'.format(avg_loss, avg_vloss))
 
+    b = [t.cpu().numpy() for t in predicted]
+    del predicted
+    predicted=np.asarray(b)
+    predicted=predicted.flatten()
+
+    del b
+    b = [t.cpu().numpy() for t in actual]
+    del actual
+    y=np.squeeze(np.asarray(b)) 
+    
+    
+    corr.append(np.corrcoef(predicted,y)[0,1])
+    print('Corr:',np.corrcoef(predicted,y)[0,1])
+    del y
+
+print('final_corr')
+print(np.max(corr))
 
         
