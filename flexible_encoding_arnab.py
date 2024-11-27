@@ -37,6 +37,7 @@ def parse_arguments():
     parser.add_argument("--batch_size", type=int, required=True)
     parser.add_argument("--subject",  type=int, required=True) 
     parser.add_argument("--hidden_layer_dim",  type=int, required=True)
+    parser.add_argument("--hidden_layer_num",  type=int, required=True)
     parser.add_argument("--lags",  nargs="+", type=int, required=True)
     parser.add_argument("--EPOCHS", type=int, required=True)
     parser.add_argument("--train_num", type=int, required=True) 
@@ -304,7 +305,7 @@ all_onsets=df.all_onsets.values
 
 df=df[df.corrupted==0]
 
-subject=798
+subject=args.subject
 
 elec_id=get_elec_id(subject)
 
@@ -316,6 +317,8 @@ else:
     electrode_data=np.zeros((len(df.conversation_name.values),len(elec_id),len(lags))) 
 
 embeddings=[]
+
+print('preparing electrode data')
 
 p=0
 for conv_name in conv_names:
@@ -384,6 +387,9 @@ testset = torch.utils.data.TensorDataset(X_test, y_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, drop_last=True)
 
 
+
+print('electrode data prep done')
+
 #Model
 
 class flex_encoding(nn.Module):
@@ -402,7 +408,7 @@ class flex_encoding(nn.Module):
     
     def forward(self, x1):
         
-        if args.hidden_layer_num==0:
+        if args.hidden_layer_num!=0:
             x= self.activition(self.fc2(x1))
 
             for k in range(args.hidden_layer_num):
@@ -444,7 +450,7 @@ class CustomLoss_min_MSE(nn.Module):
     #instead of MSE it takes the min loss across the lags for each sentence
 
     def __init__(self):
-        super(CustomLoss, self).__init__()
+        super(CustomLoss_min_MSE, self).__init__()
 
     def forward(self, y_pred, targets):
         mse_error = torch.min(torch.square(targets-y_pred),-1).values
@@ -523,7 +529,7 @@ for epoch in range(EPOCHS):
 
     # Make sure gradient tracking is on, and do a pass over the data
     model.train(True)
-    avg_loss = train_one_epoch(epoch)
+    avg_loss = train_one_epoch(epoch,args)
 
 
     running_vloss = 0.0
@@ -555,8 +561,8 @@ for epoch in range(EPOCHS):
             a1=torch.min(output1,dim=-1)
             predicted.append((a1.values))
 
-            for i in range(vlabels.shape[0]):    
-                actual.append(vlabels[i, a1.indices[i]] )
+            for ii in range(vlabels.shape[0]):    
+                actual.append(vlabels[ii, 0, a1.indices[ii]] )
 
     avg_vloss = running_vloss / (i + 1)
     print('LOSS train {} valid {}'.format(avg_loss, avg_vloss))
@@ -570,6 +576,8 @@ for epoch in range(EPOCHS):
     b = [t.cpu().numpy() for t in actual]
     del actual
     y=np.squeeze(np.asarray(b)) 
+
+    # breakpoint()
     
     
     corr.append(np.corrcoef(predicted,y)[0,1])
