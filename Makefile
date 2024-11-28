@@ -8,8 +8,8 @@
 %-encoding: hidden_layer_num= 1  ## number of hidden layers
 %-encoding: subject = 798   # 798
 # %-encoding: lags ?= 0 -50 50 #0 50 100 #
-%-encoding: lags= $(shell seq -100 100 200) # taking -10s to +2s relative to sentence offset
-%-encoding: EPOCHS= 100 
+%-encoding: lags= $(shell seq -2000 100 2000) # taking -10s to +2s relative to sentence offset
+%-encoding: EPOCHS= 2 
 %-encoding: train_num= 3500
 %-encoding: taking_words=False
 %-encoding: activation_function='ReLU'
@@ -22,7 +22,7 @@
 %-encoding: min_num_words = 5
 %-encoding: electrode = 5
 %-encoding: CMD = sbatch --job-name=deep_enc-hidden_layer-$(hidden_layer_num) submit.sh
-%-encoding: CMD = python 
+# %-encoding: CMD = python 
 
 # %-srm: JOB_NAME = $(subst /,-,$(desired_fold))
 # %-srm: CMD = sbatch --job-name=$(production)-$(JOB_NAME)-across submit.sh
@@ -30,7 +30,7 @@
 
 deep-encoding:
 
-		$(CMD) /scratch/gpfs/arnab/flexible_encoding/flexible_encoding_arnab.py\
+		$(CMD) /scratch/gpfs/arnab/flexible_encoding/flexible_encoding_arnab_v2.py\
 		--batch_size $(batch_size) \
 		--hidden_layer_dim $(hidden_layer_dim) \
 		--hidden_layer_num $(hidden_layer_num) \
