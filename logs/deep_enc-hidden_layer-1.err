@@ -1,2 +1,8 @@
-/var/spool/slurmd/job60626893/slurm_script: line 37: 928605 Killed                  python "$@"
-slurmstepd: error: Detected 1 oom_kill event in StepId=60626893.batch. Some of the step tasks have been OOM Killed.
+Traceback (most recent call last):
+  File "/scratch/gpfs/arnab/flexible_encoding/flexible_encoding_arnab_v2.py", line 355, in <module>
+    a1= get_elec_data(subject, df, ecogs, conv_name, x, offsets[k], lags, elec_id, lag_number,taking_words)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/gpfs/arnab/flexible_encoding/flexible_encoding_arnab_v2.py", line 256, in get_elec_data
+    Y_data[k,:] = np.mean(Y1, axis=-1)
+    ~~~~~~^^^^^
+ValueError: could not broadcast input array from shape (2,) into shape (3,)

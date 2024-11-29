@@ -44,7 +44,7 @@ def parse_arguments():
     parser.add_argument("--min_num_words", type=int, required=True)
     parser.add_argument("--use_second_network", action="store_true")
     parser.add_argument("--electrode", type=int, required=True)
-    parser.add_argument("--taking_words", type=bool, required=True) 
+    parser.add_argument("--taking_words", action="store_true")
     parser.add_argument("--num_words", type=int, required=True)
     parser.add_argument("--activation_function", type=str, required=True)
     parser.add_argument("--learning_rate",  type=float, required=True) 
@@ -255,7 +255,7 @@ def get_elec_data(subject, df, ecogs, conv_name, all_onsets, offset, lags, elec_
            
         Y_data[k,:] = np.mean(Y1, axis=-1)
 
-        Y_data[:, :len_to_pad_high_value]= high_value
+    # Y_data[:, :len_to_pad_high_value]= high_value
 
     return Y_data
 
@@ -327,6 +327,8 @@ print('preparing electrode data')
 p=0
 for conv_name in conv_names:
 
+    print(conv_name)
+
     print(p)
 
     ecogs=all_ecog(elec_id, conv_name,subject)
@@ -351,6 +353,8 @@ for conv_name in conv_names:
         x=all_onsets[k]
 
         if offsets[k] < len(ecogs[:,0]):
+
+            # print(k)
         
             a1= get_elec_data(subject, df, ecogs, conv_name, x, offsets[k], lags, elec_id, lag_number,taking_words)
             electrode_data[p,:,:]=a1
@@ -359,10 +363,11 @@ for conv_name in conv_names:
 
     # p=p+1
 
+
 def custom_Zscore(x,high_value=HIGH_Value):
  
 
- for k in range(np.shape(x)[0]):
+ for k in range(np.shape(x)[1]):
      
      y= x[:,k]
      y=y[y!=high_value]
