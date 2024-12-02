@@ -587,11 +587,14 @@ for epoch in range(EPOCHS):
             
             running_vloss += vloss
 
-            a1=torch.min(output1,dim=-1)
-            predicted.append((a1.values))
+            mse_error = torch.min(torch.square(output1-vlabels),-1)
+
+            # a1=torch.min(output1,dim=-1)
+            # predicted.append((a1.values))
 
             for ii in range(vlabels.shape[0]):    
-                actual.append(vlabels[ii, 0, a1.indices[ii]] )
+                actual.append(vlabels[ii, 0, mse_error.indices[ii]] )
+                predicted.append(output1[ii, 0, mse_error.indices[ii]] )
 
     avg_vloss = running_vloss / (i + 1)
     print('LOSS train {} valid {}'.format(avg_loss, avg_vloss))

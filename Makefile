@@ -5,12 +5,12 @@
 
 %-encoding: batch_size = 10
 %-encoding: hidden_layer_dim= 30
-%-encoding: hidden_layer_num= 1  ## number of hidden layers
+%-encoding: hidden_layer_num=1  ## number of hidden layers
 %-encoding: subject = 798   # 798
 # %-encoding: lags ?= 0 -50 50 #0 50 100 #
-%-encoding: lags= $(shell seq -1000 500 1000) # taking -10s to +2s relative to sentence offset
-%-encoding: EPOCHS= 2 
-%-encoding: train_num= 3500
+%-encoding: lags= $(shell seq -2000 100 1000) # taking -10s to +2s relative to sentence offset
+%-encoding: EPOCHS= 200
+%-encoding: train_num= 4000
 # %-encoding: taking_words= --taking_words  ##uncomment it to have taking_words==True
 %-encoding: activation_function='ReLU'
 # %-encoding: second_network= --use_second_network  ##uncomment it to use the second network
@@ -22,7 +22,7 @@
 %-encoding: min_num_words = 5
 %-encoding: electrode = 5
 %-encoding: CMD = sbatch --job-name=deep_enc-hidden_layer-$(hidden_layer_num) submit.sh
-%-encoding: CMD = python 
+# %-encoding: CMD = python 
 
 # %-srm: JOB_NAME = $(subst /,-,$(desired_fold))
 # %-srm: CMD = sbatch --job-name=$(production)-$(JOB_NAME)-across submit.sh
