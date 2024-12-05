@@ -8,7 +8,7 @@
 %-encoding: hidden_layer_num=1  ## number of hidden layers
 %-encoding: subject = 798   # 798
 # %-encoding: lags ?= 0 -50 50 #0 50 100 #
-%-encoding: lags= $(shell seq -2000 100 1000) # taking -10s to +2s relative to sentence offset
+%-encoding: lags= $(shell seq -200 100 100) # taking -10s to +2s relative to sentence offset
 %-encoding: EPOCHS= 200
 %-encoding: train_num= 4000
 # %-encoding: taking_words= --taking_words  ##uncomment it to have taking_words==True
@@ -22,7 +22,7 @@
 %-encoding: min_num_words = 5
 %-encoding: electrode = 5
 %-encoding: CMD = sbatch --job-name=deep_enc-hidden_layer-$(hidden_layer_num) submit.sh
-# %-encoding: CMD = python 
+%-encoding: CMD = python 
 
 # %-srm: JOB_NAME = $(subst /,-,$(desired_fold))
 # %-srm: CMD = sbatch --job-name=$(production)-$(JOB_NAME)-across submit.sh

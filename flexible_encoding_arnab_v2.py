@@ -486,7 +486,48 @@ class CustomLoss_min_MSE(nn.Module):
         
         return mse_error.mean()  
 
+def create_result(epoch, predicted_output, actual_output):
 
+    predicted_output=torch.squeeze(predicted_output,1)
+    actual_output=torch.squeeze(actual_output,1)
+
+    # mse_error = torch.min(torch.square(predicted_output-actual_output),-1)
+
+    mse_error = (torch.square(predicted_output-actual_output))
+    sorted, indices = torch.sort(mse_error)
+
+    sorted_actual= [actual_output[i,indices[i,:]] for i in range(actual_output.shape[0])]
+    sorted_actual=torch.stack(sorted_actual)
+                              
+    corr=[]
+
+    for i in range(sorted_actual.shape[0]):
+        corr.append(np.corrcoef(predicted[:,i],sorted_actual[i,:])[0,1])
+
+
+    df1=pd.DataFrame([[epoch, corr,indices]], columns=['epoch', 'corr', 'lag_position'])                        
+    result=pd.concat([result,df1], ignore_index=True)                      
+
+    # predicted=[]
+    # actual=[]
+
+    # for ii in range(actual_output.shape[0]):    
+    #     actual.append(vlabels[ii, 0, mse_error.indices[ii]])
+    #     predicted.append(output1[ii, 0, mse_error.indices[ii]])
+
+    # b = [t.cpu().numpy() for t in predicted]
+    # del predicted
+    # predicted=np.asarray(b)
+    # predicted=predicted.flatten()
+
+    # del b
+    # b = [t.cpu().numpy() for t in actual]
+    # del actual
+    # y=np.squeeze(np.asarray(b))
+
+    # corr=(np.corrcoef(predicted,y)[0,1])
+
+    return result, corr[0]
     
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model=flex_encoding(emb_dim, lag_number,hidden_layer_dim)
@@ -552,7 +593,7 @@ def train_one_epoch(epoch_index,args):
     
 #Training
 corr=[]
-
+result = pd.DataFrame(columns=['epoch','corr','lag_position'])
 for epoch in range(EPOCHS):
     print('EPOCH {}:'.format(epoch + 1))
 
@@ -568,6 +609,8 @@ for epoch in range(EPOCHS):
 
     predicted=[]
     actual=[]
+
+    p=0
 
     # Disable gradient computation and reduce memory consumption.
     with torch.no_grad():
@@ -587,36 +630,62 @@ for epoch in range(EPOCHS):
             
             running_vloss += vloss
 
-            mse_error = torch.min(torch.square(output1-vlabels),-1)
+            if p==0:
+                predicted_output=output1
+                actual_output=vlabels
+                p=p+1
 
-            # a1=torch.min(output1,dim=-1)
-            # predicted.append((a1.values))
+            else:
+                predicted_output=torch.cat((predicted_output,output1),dim=0)
+                actual_output=torch.cat((actual_output,vlabels),dim=0)
 
-            for ii in range(vlabels.shape[0]):    
-                actual.append(vlabels[ii, 0, mse_error.indices[ii]] )
-                predicted.append(output1[ii, 0, mse_error.indices[ii]] )
+            # mse_error = torch.min(torch.square(output1-vlabels),-1)
 
-    avg_vloss = running_vloss / (i + 1)
-    print('LOSS train {} valid {}'.format(avg_loss, avg_vloss))
+            # # a1=torch.min(output1,dim=-1)
+            # # predicted.append((a1.values))
 
-    b = [t.cpu().numpy() for t in predicted]
-    del predicted
-    predicted=np.asarray(b)
-    predicted=predicted.flatten()
+            # for ii in range(vlabels.shape[0]):    
+            #     actual.append(vlabels[ii, 0, mse_error.indices[ii]] )
+            #     predicted.append(output1[ii, 0, mse_error.indices[ii]] )
 
-    del b
-    b = [t.cpu().numpy() for t in actual]
-    del actual
-    y=np.squeeze(np.asarray(b)) 
+    # breakpoint()
+
+    # avg_vloss = running_vloss / (i + 1)
+    # print('LOSS train {} valid {}'.format(avg_loss, avg_vloss))
+
+    # b = [t.cpu().numpy() for t in predicted]
+    # del predicted
+    # predicted=np.asarray(b)
+    # predicted=predicted.flatten()
+
+    # del b
+    # b = [t.cpu().numpy() for t in actual]
+    # del actual
+    # y=np.squeeze(np.asarray(b)) 
+
+    # corr.append(np.corrcoef(predicted,y)[0,1])
+    # print('Corr:',np.corrcoef(predicted,y)[0,1])
+    # del y
 
     # breakpoint()
     
+    [result, c]= create_result(epoch, predicted_output, actual_output)
+    corr.append(c)
+    print('Corr:',c)
+
+
     
-    corr.append(np.corrcoef(predicted,y)[0,1])
-    print('Corr:',np.corrcoef(predicted,y)[0,1])
-    del y
+
 
 print('final_corr')
 print(np.max(corr))
+best_epoch=np.argmax(corr)
 
+epoch=result.loc[best_epoch,'epoch']
+corr=result.loc[best_epoch,'epoch']
+lag_indices=result.loc[best_epoch,'lag_position']
+
+df1=pd.DataFrame([[epoch, corr,lag_indices]], columns=['epoch', 'corr', 'lag_position'])
+filename='/scratch/gpfs/arnab/result/csv/'+result.csv
+df1.to_csv(filename)
         
