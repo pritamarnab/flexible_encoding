@@ -49,6 +49,7 @@ def parse_arguments():
     parser.add_argument("--activation_function", type=str, required=True)
     parser.add_argument("--learning_rate",  type=float, required=True) 
     parser.add_argument("--momentum",  type=float, required=True) 
+    parser.add_argument("--all_elec", action="store_true")
     # parser.add_argument("--selected_elec_id", action="store_true") 
     # parser.add_argument("--across_subject_with_repacing_srm", action="store_true")
     
@@ -126,7 +127,7 @@ def load_label(filepath):
 
     return labels_df
 
-def get_elec_id(subject):
+def get_elec_id(subject,args):
 
     path='/projects/HASSON/247/plotting/sig-elecs/20230510-tfs-sig-file/'
     
@@ -164,6 +165,11 @@ def get_elec_id(subject):
     elec_id=[]
     for elec in elecs:
         elec_id.extend(df_name_match[df_name_match.electrode_name==elec].electrode_id.values)
+
+    if args.all_elec:
+        elec_id=df_name_match.electrode_id.values.tolist()
+
+        elec_id=[k for k in elec_id if k<193]
                       
     return elec_id
 
@@ -255,14 +261,14 @@ def get_elec_data(subject, df, ecogs, conv_name, all_onsets, offset, lags, elec_
            
         Y_data[k,:] = np.mean(Y1, axis=-1)
 
-    # Y_data[:, :len_to_pad_high_value]= high_value
+    Y_data[:, :len_to_pad_high_value]= high_value
 
     return Y_data
 
-def all_ecog(elec_id, conv_name,subject ):
+def all_ecog(elec_id, conv_name,subject, args):
 
     
-    elec_id=get_elec_id(subject)
+    elec_id=get_elec_id(subject,args)
     
     path='/projects/HASSON/247/data/conversations-car/'+str(subject)+'/'
     # conv_name=df[df.conversation_id==conv_id].conversation_name.values[0]
@@ -311,7 +317,7 @@ df=df[df.corrupted==0]
 
 subject=args.subject
 
-elec_id=get_elec_id(subject)
+elec_id=get_elec_id(subject,args)
 
 conv_names=np.unique(df.conversation_name.values)
 
@@ -331,7 +337,7 @@ for conv_name in conv_names:
 
     print(p)
 
-    ecogs=all_ecog(elec_id, conv_name,subject)
+    ecogs=all_ecog(elec_id, conv_name,subject, args)
 
     df2=df[df.conversation_name==conv_name]
 
@@ -486,7 +492,7 @@ class CustomLoss_min_MSE(nn.Module):
         
         return mse_error.mean()  
 
-def create_result(epoch, predicted_output, actual_output):
+def create_result(epoch, predicted_output, actual_output,result):
 
     predicted_output=torch.squeeze(predicted_output,1)
     actual_output=torch.squeeze(actual_output,1)
@@ -498,15 +504,23 @@ def create_result(epoch, predicted_output, actual_output):
 
     sorted_actual= [actual_output[i,indices[i,:]] for i in range(actual_output.shape[0])]
     sorted_actual=torch.stack(sorted_actual)
-                              
+
+    mean_loss= torch.mean(mse_error, 0)
+    mean_loss = [t.cpu().numpy() for t in mean_loss]
+    mse_error = [t.cpu().numpy() for t in mse_error]
+
+    min_loss_lag_position=indices[:,0]
+    min_loss_lag_position = [t.cpu().numpy() for t in min_loss_lag_position]
     corr=[]
 
-    for i in range(sorted_actual.shape[0]):
-        corr.append(np.corrcoef(predicted[:,i],sorted_actual[i,:])[0,1])
+    for i in range(sorted_actual.shape[1]):
+        corr.append(np.corrcoef(predicted_output[:,i],sorted_actual[:,i])[0,1])
 
 
-    df1=pd.DataFrame([[epoch, corr,indices]], columns=['epoch', 'corr', 'lag_position'])                        
+    df1=pd.DataFrame([[epoch, corr,mean_loss, mse_error,min_loss_lag_position]], columns=['epoch', 'corr', 'mean_loss', 'mse_error','min_loss_lag_position'])                        
     result=pd.concat([result,df1], ignore_index=True)                      
+
+    # breakpoint()
 
     # predicted=[]
     # actual=[]
@@ -593,7 +607,7 @@ def train_one_epoch(epoch_index,args):
     
 #Training
 corr=[]
-result = pd.DataFrame(columns=['epoch','corr','lag_position'])
+result = pd.DataFrame(columns=['epoch','corr','mean_loss', 'mse_error','min_loss_lag_position'])
 for epoch in range(EPOCHS):
     print('EPOCH {}:'.format(epoch + 1))
 
@@ -669,7 +683,7 @@ for epoch in range(EPOCHS):
 
     # breakpoint()
     
-    [result, c]= create_result(epoch, predicted_output, actual_output)
+    [result, c]= create_result(epoch, predicted_output, actual_output,result)
     corr.append(c)
     print('Corr:',c)
 
@@ -682,10 +696,25 @@ print(np.max(corr))
 best_epoch=np.argmax(corr)
 
 epoch=result.loc[best_epoch,'epoch']
-corr=result.loc[best_epoch,'epoch']
-lag_indices=result.loc[best_epoch,'lag_position']
+corr=result.loc[best_epoch,'corr']
+mean_loss=result.loc[best_epoch,'mean_loss']
+mse_error=result.loc[best_epoch,'mse_error']
+indices=result.loc[best_epoch,'min_loss_lag_position']
 
-df1=pd.DataFrame([[epoch, corr,lag_indices]], columns=['epoch', 'corr', 'lag_position'])
-filename='/scratch/gpfs/arnab/result/csv/'+result.csv
-df1.to_csv(filename)
+df2=pd.DataFrame([[args.electrode, corr,mean_loss, mse_error,indices]], columns=['elec number', 'corr', 'mean_loss', 'mse_error','min_loss_indices'])
+
+# df1=pd.DataFrame([[epoch, corr,mean_loss, mse_error]], columns=['epoch', 'corr', 'mean_loss','mse_error'])
+# filename='/scratch/gpfs/arnab/flexible_encoding/results/csv/'+'result_'+str(electrode)+'.csv'
+# df1.to_csv(filename)
+
+# plt.plot(corr)
+# plt.savefig('/scratch/gpfs/arnab/flexible_encoding/results/plots/'+'elec_'+str(electrode)+'.png', dpi=600)
+
+
+
         
+df1=pd.read_csv('/scratch/gpfs/arnab/flexible_encoding/results/csv/all_result.csv')
+
+df1=pd.concat([df1,df2], ignore_index=True)
+filename='/scratch/gpfs/arnab/flexible_encoding/results/csv/all_result.csv'
+df1.to_csv(filename)

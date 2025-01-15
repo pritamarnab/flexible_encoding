@@ -1,0 +1,6 @@
+It's della-gpu
+Requester: arnab Node: della-h12n16
+/scratch/gpfs/arnab/flexible_encoding/flexible_encoding_arnab_v2.py --batch_size 10 --hidden_layer_dim 30 --hidden_layer_num 1 --subject 798 --lags -100 0 100 200 --EPOCHS 100 --train_num 4000 --num_words 3 --min_num_words 5 --electrode 0 --activation_function ReLU --learning_rate 0.001 --momentum 0.9 --all_elec
+Start time: Wed Jan 15 16:09:25 EST 2025
+End time: Wed Jan 15 16:29:58 EST 2025
+Elapsed Time: 1233 seconds

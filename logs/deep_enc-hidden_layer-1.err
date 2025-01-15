@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/scratch/gpfs/arnab/flexible_encoding/flexible_encoding_arnab_v2.py", line 701, in <module>
+    df1.to_csv(filename)
+  File "/home/arnab/.conda/envs/torch-arnab/lib/python3.12/site-packages/pandas/util/_decorators.py", line 333, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arnab/.conda/envs/torch-arnab/lib/python3.12/site-packages/pandas/core/generic.py", line 3964, in to_csv
+    return DataFrameRenderer(formatter).to_csv(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arnab/.conda/envs/torch-arnab/lib/python3.12/site-packages/pandas/io/formats/format.py", line 1014, in to_csv
+    csv_formatter.save()
+  File "/home/arnab/.conda/envs/torch-arnab/lib/python3.12/site-packages/pandas/io/formats/csvs.py", line 251, in save
+    with get_handle(
+         ^^^^^^^^^^^
+  File "/home/arnab/.conda/envs/torch-arnab/lib/python3.12/site-packages/pandas/io/common.py", line 749, in get_handle
+    check_parent_directory(str(handle))
+  File "/home/arnab/.conda/envs/torch-arnab/lib/python3.12/site-packages/pandas/io/common.py", line 616, in check_parent_directory
+    raise OSError(rf"Cannot save file into a non-existent directory: '{parent}'")
+OSError: Cannot save file into a non-existent directory: '/scratch/gpfs/arnab/results/csv'
