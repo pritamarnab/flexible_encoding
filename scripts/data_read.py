@@ -176,7 +176,14 @@ def getting_df(args):
 
     elif args.analysis_level=='utterance':
 
-        path_data='/scratch/gpfs/arnab/247_data_read/utterance_gpt2xl_798.pkl'
+        if args.model_name_emb=='gpt2-xl':
+
+            path_data='/scratch/gpfs/arnab/flexible_encoding/pickles_for_flex_encoding/utterance_gpt2-xl_798.pkl'
+
+        elif args.model_name_emb=='mistral-7b':
+            path_data='/scratch/gpfs/arnab/flexible_encoding/pickles_for_flex_encoding/utterance_mistral-7b_798.pkl'
+
+
         df=load_label(path_data)
         df=df[df.num_words>args.min_num_words]
         df=df[df.duration<args.max_duration]
@@ -305,10 +312,10 @@ def preparing_elec_data(args):
     test_durations=durations[train_num:]
 
     trainset = torch.utils.data.TensorDataset(X_train, y_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, drop_last=True)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, drop_last=False)
 
     testset = torch.utils.data.TensorDataset(X_test, y_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, drop_last=True)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, drop_last=False)
 
     print('electrode data prep done')
 

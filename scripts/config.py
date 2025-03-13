@@ -32,6 +32,8 @@ def parse_arguments():
     parser.add_argument("--HIGH_Value", type=int, default=int(1e5), required=False)
     parser.add_argument("--emb_dim", type=int, default=int(50), required=False)
     parser.add_argument("--save_dir", type=str, default=str('/scratch/gpfs/arnab/flexible_encoding/results/mat_files/'), required=False)
+    parser.add_argument("--model_name_emb", type=str, required=True)
+    # parser.add_argument("--model_name_base_df", type=str, required=True)
     # parser.add_argument("--selected_elec_id", action="store_true") 
     # parser.add_argument("--across_subject_with_repacing_srm", action="store_true")
     

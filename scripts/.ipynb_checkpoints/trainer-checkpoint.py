@@ -39,12 +39,10 @@ def main():
 
     print(args)
 
-    
+    breakpoint()
 
     # Load data
     [trainloader, testloader, test_durations] = preparing_elec_data(args)
-
-    
 
     # Create model
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -66,13 +64,12 @@ def main():
     #Training
     [corr, mean_loss, mse_error, indices] = training(args,model, trainloader, testloader, optimizer, loss_fn)
 
-    
     # Save model
     # filename='/scratch/gpfs/arnab/flexible_encoding/results/mat_files/'+'elec_result_'+str(args.electrode)+'_max_lag_'+str(np.abs(lags[0]/1000))+'.mat'
-    filename=args.save_dir+'/elec_result_'+str(args.electrode)+'_max_lag_'+str(np.abs(args.lags[0]/1000))+'.mat'
+    filename=args.save_dir+'elec_result_'+str(args.electrode)+'_max_lag_'+str(np.abs(args.lags[0]/1000))+'.mat'
     # df2.to_csv(filename)
   
-    savemat(filename,{'corr':corr,'mse_error':mse_error,'min_loss_indices':indices,'lags':args.lags, 'test_durations':test_durations})
+    # savemat(filename,{'corr':corr,'mse_error':mse_error,'min_loss_indices':indices,'lags':args.lags, 'test_durations':test_durations})
 
     return None 
 

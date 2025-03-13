@@ -202,14 +202,17 @@ def training(args,model, trainloader, testloader, optimizer, loss_fn):
                 running_vloss += vloss
 
                 if p==0:
+        
                     predicted_output=output1
                     actual_output=vlabels
                     p=p+1
 
                 else:
+        
                     predicted_output=torch.cat((predicted_output,output1),dim=0)
                     actual_output=torch.cat((actual_output,vlabels),dim=0)
 
+        
         [result, c]= create_result(epoch, predicted_output, actual_output,result)
         corr.append(c)
         print('Corr:',c)
