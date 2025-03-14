@@ -19,14 +19,12 @@
 %-encoding: max_duration=15 # what is the max utterance duration allowed
 %-encoding: model_name_emb='mistral-7b' #'gpt2-xl'| 'mistral-7b' 
 
-
-
 %-encoding: learning_rate=0.001
 %-encoding: momentum=0.9
 %-encoding: all_elec= --all_elec  ##uncomment it to have all_elec==True
 %-encoding: num_words= 3  #only valid if taking words==True
 %-encoding: min_num_words = 5
-%-encoding: electrodes = $(shell seq 1 192)  ##if all_elec==True, the highest electrode can be 192, else 40 
+%-encoding: electrodes = $(shell seq 179 192)  ##if all_elec==True, the highest electrode can be 192, else 40 
 %-encoding: CMD = sbatch --job-name=deep_enc-electrode-$$electrode submit.sh
 # %-encoding: CMD = python 
 # %-srm: JOB_NAME = $(subst /,-,$(desired_fold))
@@ -41,7 +39,9 @@ deep-encoding:
 
 	@analysis_level=$(analysis_level); \
 	model_name=$(model_name_emb); \
-	DIR_NAME=/scratch/gpfs/arnab/flexible_encoding/results/mat_files/mat_files_$${analysis_level}_$${model_name_emb}_$(DT); \
+	DIR_NAME=/scratch/gpfs/arnab/flexible_encoding/results/mat_files/mat_files_$${analysis_level}_$${model_name}_$(DT); \
+
+	# echo "Creating directory: $${DIR_NAME}"; \
 		
 	mkdir -p $${DIR_NAME}
 
@@ -99,14 +99,16 @@ create-pickle:
 
 %-plot: subject = 798   # 798
 # %-encoding: lags ?= 0 -50 50 #0 50 100 #
-%-plot: folder_name='mat_files_utterance__20250312-17:32:13' #folder name where the elec mat files are stored
-%-plot: model_name_emb='gpt2-xl' #'gpt2-xl'| 'mistral-7b' 
-%-plot: duration = 'medium' # 'short' | 'medium' | 'long'| 'all'
+%-plot: folder_name='mat_files_utterance_mistral-7b_20250312-23:00:36' #folder name where the elec mat files are stored
+%-plot: model_name_emb='mistral-7b' #'gpt2-xl'| 'mistral-7b' 
+%-plot: duration = 'all' # 'short' | 'medium' | 'long'| 'all'
 
-%-plot: CMD = sbatch --job-name=create_plot-duration-$$duration submit.sh
+%-plot: CMD = sbatch --job-name=create_plot-duration-$(duration) submit.sh
 # %-plot: CMD = python 
 
 create-plot:
+
+	
 	
 	$(CMD) /scratch/gpfs/arnab/flexible_encoding/scripts/plotting.py\
 			--subject $(subject) \
